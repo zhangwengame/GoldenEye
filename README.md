@@ -1,3 +1,5 @@
+# Edited edition for AWS Lambda
+
 # GoldenEye 
 
 GoldenEye is an python app for SECURITY TESTING PURPOSES ONLY!
