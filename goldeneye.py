@@ -210,11 +210,12 @@ class GoldenEye(object):
                 for worker in self.workersQueue:
                     if worker is not None and worker.is_alive():
                         worker.join(JOIN_TIMEOUT)
+                        f = open("./log", "w")
+                        f.write("{0} {1} {2}".format(self.counter[0], self.counter[1], self.counter[2]))
+                        f.close()
                     else:
                         self.workersQueue.remove(worker)
-                f = open("./log", "w")
-                f.write("{0} {1} {2}".format(self.counter[0], self.counter[1], self.counter[2]))
-                f.close()
+
                 self.stats()
 
             except (KeyboardInterrupt, SystemExit):
