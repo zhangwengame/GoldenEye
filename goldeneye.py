@@ -117,8 +117,8 @@ USER_AGENT_PARTS = {
 class GoldenEye(object):
 
     # Counters
-    counter = [0, 0]
-    last_counter = [0, 0]
+    counter = [0, 0, 0]
+    last_counter = [0, 0, 0]
 
     # Containers
     workersQueue = []
@@ -142,7 +142,7 @@ class GoldenEye(object):
         self.manager = Manager()
 
         # Initialize Counters
-        self.counter = self.manager.list((0, 0))
+        self.counter = self.manager.list((0, 0, 0))
 
 
     def exit(self):
@@ -200,6 +200,7 @@ class GoldenEye(object):
     
                 self.last_counter[0] = self.counter[0]
                 self.last_counter[1] = self.counter[1]
+                self.last_counter[2] = self.counter[2]
         except (Exception):
             pass # silently ignore
         sys.stdout.flush()
@@ -211,7 +212,9 @@ class GoldenEye(object):
                         worker.join(JOIN_TIMEOUT)
                     else:
                         self.workersQueue.remove(worker)
-
+                f = open("./log", "w")
+                f.write("{0} {1} {2}".format(self.counter[0], self.counter[1], self.counter[2]))
+                f.close()
                 self.stats()
 
             except (KeyboardInterrupt, SystemExit):
@@ -340,6 +343,8 @@ class Striker(Process):
                 for conn_resp in self.socks:
 
                     resp = conn_resp.getresponse()
+                    if resp.status == 200:
+                        self.incSucc()
                     self.incCounter()
 
                 self.closeConnections()
@@ -531,6 +536,11 @@ class Striker(Process):
     def incFailed(self):
         try:
             self.counter[1] += 1
+        except (Exception):
+            pass
+    def incSucc(self):
+        try:
+            self.counter[2] += 1
         except (Exception):
             pass
         
