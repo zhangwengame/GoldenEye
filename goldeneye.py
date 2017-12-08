@@ -59,6 +59,7 @@ else:
 ####
 DEBUG = False
 SSLVERIFY = True
+OUTFILE = '/tmp/out/log'
 
 ####
 # Constants
@@ -143,8 +144,8 @@ class GoldenEye(object):
 
         # Initialize Counters
         self.counter = self.manager.list((0, 0, 0))
-        self.filePath = "./log"
-        f = open(self.filePath, "w")
+        self.filePath = OUTFILE
+        f = open(self.filePath, "w+")
         f.close()
 
     def exit(self):
@@ -185,7 +186,7 @@ class GoldenEye(object):
                     error("Failed to start worker {0}".format(i))
                     pass 
             
-            f = open("./log", "a+")
+            f = open(OUTFILE, "a+")
             f.write("{0} {1} {2}\n".format(self.counter[0], self.counter[1], self.counter[2]))
             f.close()
             if self.counter[0] > 0 or self.counter[1] > 0:
@@ -610,7 +611,7 @@ def main():
         if url == None:
             error("No URL supplied")
 
-        opts, args = getopt.getopt(sys.argv[2:], "ndhw:s:m:u:", ["nosslcheck", "debug", "help", "workers", "sockets", "method", "useragents" ])
+        opts, args = getopt.getopt(sys.argv[2:], "ndhw:s:m:u:o:", ["nosslcheck", "debug", "help", "workers", "sockets", "method", "useragents" ])
 
         workers = DEFAULT_WORKERS
         socks = DEFAULT_SOCKETS
@@ -640,6 +641,9 @@ def main():
                     method = a
                 else:
                     error("method {0} is invalid".format(a))
+            elif o in ("-o",):
+                global OUTFILE
+                OUTFILE = a
             else:
                 error("option '"+o+"' doesn't exists")
 
