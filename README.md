@@ -1,6 +1,8 @@
 # Edited edition for AWS Lambda
+Make the DDos attack rate to be constant and not blocked or influenced by target server
 
 # GoldenEye 
+https://github.com/jseidl/GoldenEye.git
 
 GoldenEye is an python app for SECURITY TESTING PURPOSES ONLY!
 
